@@ -1,0 +1,23 @@
+{
+  "name": "lessdiff",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "test": "echo \"Error: no test specified\" && exit 1"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/devWayne/LessDiff.git"
+  },
+  "author": "Jarvan",
+  "license": "MIT",
+  "bugs": {
+    "url": "https://github.com/devWayne/LessDiff/issues"
+  },
+  "homepage": "https://github.com/devWayne/LessDiff#readme",
+  "dependencies": {
+    "chokidar": "^1.2.0",
+    "glob": "^5.0.15"
+  }
+}
