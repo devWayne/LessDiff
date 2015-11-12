@@ -18,6 +18,9 @@
   "homepage": "https://github.com/devWayne/LessDiff#readme",
   "dependencies": {
     "chokidar": "^1.2.0",
-    "glob": "^5.0.15"
+    "glob": "^5.0.15",
+    "less": "^2.5.3",
+    "mkdirp": "^0.5.1",
+    "nl-clilog": "^1.1.1"
   }
 }

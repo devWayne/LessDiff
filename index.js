@@ -1,15 +1,18 @@
-'use strict';
-
 const glob = require("glob"),
   fs = require('fs'),
-  path = require('path'),
-  format = require('./format'),
-  chokidar = require('chokidar');
+  path = require('path');
+
+const chokidar = require('chokidar'),
+  log = require('nl-clilog'),
+  less = require('less'),
+  mkdirp = require('mkdirp');
+
+const format = require('./format');
 
 /**
  *  Reg Parse
  */
-const LESSPARSE = /([..\/]+[\w]+)+\.less/g;
+const LESSPARSE = /([..\/]+[\w-]+)+\.less/g;
 //TODO Other fileTypes
 const IMGPARSE = 0;
 
@@ -26,20 +29,85 @@ var Tree = {};
  */
 function LessDiff(srcPath, options) {
   srcPath = srcPath || "src/**/*.less";
-  this._getTree(srcPath, {}, function() {
+  this._getTree(srcPath, {}, () => {
     chokidar.watch(srcPath, {
       ignored: /[\/\\]\./
-    }).on('change', function(path, event) {
-      console.info(path);
-	  //console.info(Tree);
-      //console.info(Tree);
-      if (Tree[path]) {
-        console.info(Tree[path]);
+    }).on('change', (path, event) => {
+      console.info('changed:'+path);
+      //if (Tree[path] && Tree[path].length > 0) {
+	  	this._render(path);
+        this._redex([], path, Tree[path]);
+      //}
+    });
+  });
+}
+
+/**
+ * @param {varType} path Description
+ * @param {varType} tree Description
+ * @return {void} description
+ */
+LessDiff.prototype._redex = function(pathList, path, node) {
+  var pathList = pathList || [];
+  pathList.push(path);
+  //log.debug(node);
+  if (!node) return;
+  this._log(pathList, node);
+  if (node.length == 0) return;
+  node.forEach((value, idx) => {
+    if (Tree[value] && Tree[value].length > 0) {
+      this._redex(this._unique(pathList), value, Tree[value]);
+    }
+  });
+}
+
+/**
+ * Console Log
+ * @param {varType} path Description
+ * @param {varType} tree Description
+ * @return {void} description
+ */
+LessDiff.prototype._log = function(pathList, node) {
+  const ARROW = '\033[31m => \033[0m';
+  return node.forEach((v, idx) => {
+    console.info('\033[1;33m' + pathList.join(ARROW) + '\033[0m' + ARROW + '\033[1;32m' + v.toString() + '\033[0m');
+    this._render(v);
+  });
+}
+
+
+/**
+ * @param {varType} content Description
+ * @return {void} description
+ */
+LessDiff.prototype._render = function(_path) {
+  const content = fs.readFileSync(_path).toString();
+  var opts = {};
+  opts.filename = _path;
+
+  return less.render(content, opts).then(function(res) {
+    const distPath = _path.replace('src/', 'build1/').replace('less', 'css');
+    mkdirp(path.dirname(distPath), function(err) {
+      if (err) console.error(err);
+      else {
+        log.debug('build:' + distPath);
+        fs.writeFileSync(distPath, res.css);
+        return;
       }
     });
+
+  }).catch(function(err) {
+    // Convert the keys so PluginError can read them
+    err.lineNumber = err.line;
+    err.fileName = err.filename;
+
+    // Add a better error message
+    err.message = err.message + ' in file ' + err.fileName + ' line no. ' + err.lineNumber;
+    log.error(err.message);
   });
 
 }
+
 
 /**
  * @param {varType} src Description
@@ -49,14 +117,13 @@ LessDiff.prototype._getTree = function(srcPath, opts, callback) {
   glob(srcPath, opts, (err, files) => {
     if (err) return;
     files.forEach((file, idx) => {
-      const data = fs.readFileSync(file, 'utf8'); 
+      const data = fs.readFileSync(file, 'utf8');
       const dpPathList = this._getDpList(data, file);
       this._toTree(dpPathList, file);
     });
-	console.log(Tree);
     fs.writeFileSync('tree.js', format(JSON.stringify(Tree)));
-    console.log('render end');
-    callback();
+    log.debug('已在当前目录生成依赖关系文件"tree.js"');
+    callback(Tree);
   });
 }
 
@@ -68,14 +135,10 @@ LessDiff.prototype._getTree = function(srcPath, opts, callback) {
 LessDiff.prototype._getDpList = function(buffer, currentPath) {
   const list = buffer.match(LESSPARSE) || [];
   return list.map((_path, idx) => {
-	//console.log('currentPath:'+currentPath);
-	//console.log('_path:'+_path);
-	const dirPath = path.dirname(currentPath);
-	//console.log('joined:'+ path.join(dirPath, _path));
+    const dirPath = path.dirname(currentPath);
     return path.join(dirPath, _path);
   });
 }
-
 
 /**
  * @param {varType} srcPath Description
@@ -87,11 +150,24 @@ LessDiff.prototype._toTree = function(dpPathList, currentPath) {
   dpPathList.forEach((_path, idx) => {
     if (!Tree[_path]) Tree[_path] = [];
     Tree[_path].push(currentPath);
-	//console.log(Tree);
   });
   return Tree;
 }
 
+/**
+ * @param {varType} _array Description
+ * @return {void} description
+ */
+LessDiff.prototype._unique = function(_array) {
+  var res = [], json = {};
+  for (var i = 0; i < _array.length; i++) {
+    if (!json[_array[i]]) {
+      res.push(_array[i]);
+      json[_array[i]] = 1;
+    }
+  }
+  return res;
+}
 
 /**
  * Export LessDiff
