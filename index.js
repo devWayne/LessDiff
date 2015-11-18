@@ -16,6 +16,9 @@ const LESSPARSE = /([..\/]+[\w-]+)+\.less/g;
 //TODO Other fileTypes
 const IMGPARSE = 0;
 
+//TODO
+//目前不可变
+const DEFAULTDIST = 'build/';
 
 /**
  *  Tree of Dependenies
@@ -27,15 +30,19 @@ var Tree = {};
  * @param {varType} option Description
  * @return {void} description
  */
-function LessDiff(srcPath, options) {
+function LessDiff(srcPath,distPath,options) {
+	
   srcPath = srcPath || "src/**/*.less";
+  distPath = distPath || DEFAULTDIST;
+
+
   this._getTree(srcPath, {}, () => {
     chokidar.watch(srcPath, {
       ignored: /[\/\\]\./
     }).on('change', (path, event) => {
       console.info('changed:'+path);
       //if (Tree[path] && Tree[path].length > 0) {
-	  	this._render(path);
+	  	this._render(path,DEFAULTDIST);
         this._redex([], path, Tree[path]);
       //}
     });
@@ -71,7 +78,7 @@ LessDiff.prototype._log = function(pathList, node) {
   const ARROW = '\033[31m => \033[0m';
   return node.forEach((v, idx) => {
     console.info('\033[1;33m' + pathList.join(ARROW) + '\033[0m' + ARROW + '\033[1;32m' + v.toString() + '\033[0m');
-    this._render(v);
+    this._render(v,DEFAULTDIST);
   });
 }
 
@@ -80,17 +87,17 @@ LessDiff.prototype._log = function(pathList, node) {
  * @param {varType} content Description
  * @return {void} description
  */
-LessDiff.prototype._render = function(_path) {
+LessDiff.prototype._render = function(_path,distPath) {
   const content = fs.readFileSync(_path).toString();
   var opts = {};
   opts.filename = _path;
 
   return less.render(content, opts).then(function(res) {
-    const distPath = _path.replace('src/', 'build1/').replace('less', 'css');
+    const distPath = _path.replace('src/', DEFAULTDIST).replace('less', 'css');
     mkdirp(path.dirname(distPath), function(err) {
       if (err) console.error(err);
       else {
-        log.debug('build:' + distPath);
+        log.error('build:' + distPath);
         fs.writeFileSync(distPath, res.css);
         return;
       }
