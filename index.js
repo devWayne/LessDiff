@@ -61,19 +61,37 @@ LessDiff.prototype._getTree = function(srcPath, opts, callback) {
  */
 LessDiff.prototype._getChangedList = function(path, pathList) {
 
-  if (!pathList) pathList = [];
-  if (!changedList) changedList = [];
+  //if (!pathList) pathList = [];
+  this.pathList = [];
+  this.changedList = [];
 
-  pathList.push(path);
-  //changedList.push(path);
+  this.redex(path);
+  console.log(this.pathList);
+  console.log(this.changedList);
+
+  return _unique(this.pathList);
+}
+
+LessDiff.prototype.redex = function(path,hL) {
+
+  if(!hL) hL = [];
+  hL.push(path);
+  
+  var dpList = [];
+  //console.log(path);
+
+  this.pathList.push(path);
+  this.changedList.push(hL.join('=>'));
+  //console.log( Tree[path]);
 
   if (Tree[path] && Tree[path].length > 0) {
+	 // console.log( Tree[path]);
     Tree[path].forEach((_path, idx) => {
       //changedList.push(_path);
-      pathList.concat(this._getChangedList(_path, pathList));
-    })
+	  //console.log('redex:'+path);
+      dpList.push(this.redex(_path,hL));
+    });
   }
-  return pathList
 }
 
 /**
@@ -126,3 +144,4 @@ function _unique(_array) {
  * @return {void} description
  */
 exports.LessDiff = LessDiff;
+
