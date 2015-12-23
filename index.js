@@ -59,37 +59,41 @@ LessDiff.prototype._getTree = function(srcPath, opts, callback) {
  * @param {varType} path Description
  * @return {void} description
  */
-LessDiff.prototype._getChangedList = function(path, pathList) {
+LessDiff.prototype._getChangedList = function(path) {
 
   //if (!pathList) pathList = [];
   this.pathList = [];
   this.changedList = [];
 
   this.redex(path);
-  console.log(this.pathList);
-  console.log(this.changedList);
+  this.changedList.forEach((chaneged,idx)=>{
+  	log.error('changed:' + chaneged);
+  });
+
 
   return _unique(this.pathList);
 }
 
-LessDiff.prototype.redex = function(path,hL) {
+LessDiff.prototype.redex = function(path, hL) {
 
-  if(!hL) hL = [];
-  hL.push(path);
-  
+  if (!hL) {
+    hL = [];
+    hL.push('\033[1;32m' + path + '\033[0m');
+  } else {
+    hL.push('\033[1;33m' + path + '\033[0m');
+  }
+
   var dpList = [];
-  //console.log(path);
 
   this.pathList.push(path);
-  this.changedList.push(hL.join('=>'));
-  //console.log( Tree[path]);
+  this.changedList.push(hL.join('\033[31m' + '=>' + '\033[0m'));
 
   if (Tree[path] && Tree[path].length > 0) {
-	 // console.log( Tree[path]);
+    // console.log( Tree[path]);
     Tree[path].forEach((_path, idx) => {
       //changedList.push(_path);
-	  //console.log('redex:'+path);
-      dpList.push(this.redex(_path,hL));
+      //console.log('redex:'+path);
+      dpList.push(this.redex(_path, hL));
     });
   }
 }
