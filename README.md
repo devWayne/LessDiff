@@ -13,7 +13,7 @@ gulp.task('watch', function() {
 
 ## 2.x Version 使用方式
 
-```2.0版本只分析文件的依赖关系，编译的过程还是由本身的task任务来执行```
+`2.0版本只分析文件的依赖关系，编译的过程还是由本身的task任务来执行`
 
 ```
 const lessDiff = require('lessdiff').LessDiff;
@@ -65,6 +65,7 @@ gulp.task('css', function() {
 
 ```
 
-```控制台输出：```   
+`控制台输出：`   
 
 ![](https://img.alicdn.com/tps/TB18DN6LXXXXXcDXFXXXXXXXXXX-859-296.png)
+
