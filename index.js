@@ -28,10 +28,11 @@ var Tree = {};
  * @param {varType} option Description
  * @return {void} description
  */
-function LessDiff(srcPath, distPath, options) {
+function LessDiff(options) {
 
-  srcPath = srcPath || "src/**/*.less";
-  distPath = distPath || DEFAULTDIST;
+  this.options = options || {};
+  this.options.isAbsolute = this.options.isAbsolute || false;
+
 }
 
 
@@ -66,8 +67,8 @@ LessDiff.prototype._getChangedList = function(path) {
   this.changedList = [];
 
   this.redex(path);
-  this.changedList.forEach((chaneged,idx)=>{
-  	log.error('changed:' + chaneged);
+  this.changedList.forEach((chaneged, idx) => {
+    log.error('changed:' + chaneged);
   });
 
 
@@ -107,7 +108,7 @@ LessDiff.prototype.getDpList = function(buffer, currentPath) {
   const list = buffer.match(LESSPARSE) || [];
   return list.map((_path, idx) => {
     const dirPath = path.dirname(currentPath);
-    return path.join(dirPath, _path);
+    return this.options.isAbsolute ? path.resolve(path.join(dirPath, _path)) : path.join(dirPath, _path);
   });
 }
 
@@ -120,7 +121,11 @@ LessDiff.prototype.writeDpList = function(dpPathList, currentPath) {
   //if (!Tree[currentPath]) Tree[currentPath] = [];
   dpPathList.forEach((_path, idx) => {
     if (!Tree[_path]) Tree[_path] = [];
-    Tree[_path].push(currentPath);
+    if (this.options.isAbsolute) {
+      Tree[_path].push(path.resolve(currentPath));
+    } else {
+      Tree[_path].push(currentPath);
+    }
   });
   return Tree;
 }
@@ -148,4 +153,3 @@ function _unique(_array) {
  * @return {void} description
  */
 exports.LessDiff = LessDiff;
-
